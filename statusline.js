@@ -130,12 +130,34 @@ process.stdin.on('end', () => {
     const quota = readQuota();
     const quotaParts = [];
     if (quota) {
+      // Plan name badge
+      if (quota.planName) quotaParts.push(seg(`[${quota.planName}]`, C.s));
+
+      // Main credits bar
       const qColor = quota.pct < 50 ? C.qLow : quota.pct < 80 ? C.qMid : C.qHi;
       const filled = Math.round(quota.pct / 100 * 6);
       const empty = 6 - filled;
       const qBar = qColor + bar(filled) + R + DIM + '░'.repeat(empty) + R;
       quotaParts.push(qBar + ' ' + dim(`${fmtCredits(quota.creditsUsed)}/${fmtCredits(quota.creditsTotal)}`));
-      if (quota.resetCountdown) quotaParts.push(dim(`⟳${quota.resetCountdown}`));
+
+      // Bonus credits (separate segment, different color)
+      if (quota.bonusTotal > 0) {
+        const bonusRemaining = quota.bonusTotal - quota.bonusUsed;
+        quotaParts.push(seg(`🎁 ${fmtCredits(bonusRemaining)}/${fmtCredits(quota.bonusTotal)}`, C.bar));
+      }
+
+      // Precise reset time + countdown
+      if (quota.resetTime) {
+        if (quota.resetTime === 'expired') {
+          quotaParts.push(seg('⟳expired', C.qHi));
+        } else {
+          const resetLabel = quota.resetCountdown ? `⟳${quota.resetTime} (${quota.resetCountdown})` : `⟳${quota.resetTime}`;
+          quotaParts.push(dim(resetLabel));
+        }
+      }
+
+      // Burn rate prediction
+      if (quota.burnEta) quotaParts.push(seg(`🔥${quota.burnEta}`, C.qMid));
     }
 
     const sep = ' ' + DIM + PL + ' ' + R;
