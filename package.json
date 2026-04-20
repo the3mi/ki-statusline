@@ -1,0 +1,7 @@
+{
+  "name": "ki-statusline",
+  "version": "1.0.0",
+  "description": "Statusline for Kiro CLI",
+  "type": "module",
+  "bin": "./statusline.js"
+}
