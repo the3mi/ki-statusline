@@ -113,7 +113,7 @@ process.stdin.on('end', () => {
 
     // Right: agents + uptime
     const right = [];
-    if (running > 0) right.push(seg(`${running}◆`, C.e));
+    if (running > 0) right.push(seg(`${running}\u25C6`, C.e));
     right.push(dim(age));
 
     // Last tool/agent event
@@ -143,21 +143,21 @@ process.stdin.on('end', () => {
       // Bonus credits (separate segment, different color)
       if (quota.bonusTotal > 0) {
         const bonusRemaining = quota.bonusTotal - quota.bonusUsed;
-        quotaParts.push(seg(`🎁 ${fmtCredits(bonusRemaining)}/${fmtCredits(quota.bonusTotal)}`, C.bar));
+        quotaParts.push(seg(`\uF753 ${fmtCredits(bonusRemaining)}/${fmtCredits(quota.bonusTotal)}`, C.bar));
       }
 
       // Precise reset time + countdown
       if (quota.resetTime) {
         if (quota.resetTime === 'expired') {
-          quotaParts.push(seg('⟳expired', C.qHi));
+          quotaParts.push(seg('\u27F3 expired', C.qHi));
         } else {
-          const resetLabel = quota.resetCountdown ? `⟳${quota.resetTime} (${quota.resetCountdown})` : `⟳${quota.resetTime}`;
+          const resetLabel = quota.resetCountdown ? `\u27F3 ${quota.resetTime} (${quota.resetCountdown})` : `\u27F3 ${quota.resetTime}`;
           quotaParts.push(dim(resetLabel));
         }
       }
 
       // Burn rate prediction
-      if (quota.burnEta) quotaParts.push(seg(`🔥${quota.burnEta}`, C.qMid));
+      if (quota.burnEta) quotaParts.push(seg(`\uF7EE ${quota.burnEta}`, C.qMid));
     }
 
     const sep = ' ' + DIM + PL + ' ' + R;
