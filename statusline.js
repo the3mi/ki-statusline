@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { spawnSync } from 'child_process';
+import { readQuota, fmtCredits } from './lib/quota.js';
 
 // ─── Config ────────────────────────────────────────────────────────────────
 const THEME = 'catppuccin';  // 'default' | 'nord' | 'catppuccin' | 'dracula'
@@ -14,10 +15,10 @@ const R = '\x1b[0m', DIM = '\x1b[2m', BOLD = '\x1b[1m';
 
 // ─── Themes ────────────────────────────────────────────────────────────────
 const THEMES = {
-  default:    { s: '\x1b[36m', c: '\x1b[32m', d: '\x1b[2m', e: '\x1b[35m', ok: '\x1b[32m', hi: '\x1b[31m', bar: '\x1b[36m' },
-  nord:       { s: '\x1b[38;5;75m',  c: '\x1b[38;5;181m', d: '\x1b[38;5;244m', e: '\x1b[38;5;139m', ok: '\x1b[38;5;142m', hi: '\x1b[38;5;203m', bar: '\x1b[38;5;68m' },
-  catppuccin: { s: '\x1b[38;5;147m', c: '\x1b[38;5;114m', d: '\x1b[38;5;245m', e: '\x1b[38;5;212m', ok: '\x1b[38;5;114m', hi: '\x1b[38;5;203m', bar: '\x1b[38;5;117m' },
-  dracula:    { s: '\x1b[38;5;171m', c: '\x1b[38;5;84m', d: '\x1b[38;5;244m', e: '\x1b[38;5;212m', ok: '\x1b[38;5;84m', hi: '\x1b[38;5;203m', bar: '\x1b[38;5;117m' },
+  default:    { s: '\x1b[36m', c: '\x1b[32m', d: '\x1b[2m', e: '\x1b[35m', ok: '\x1b[32m', hi: '\x1b[31m', bar: '\x1b[36m', qLow: '\x1b[32m', qMid: '\x1b[33m', qHi: '\x1b[31m' },
+  nord:       { s: '\x1b[38;5;75m',  c: '\x1b[38;5;181m', d: '\x1b[38;5;244m', e: '\x1b[38;5;139m', ok: '\x1b[38;5;142m', hi: '\x1b[38;5;203m', bar: '\x1b[38;5;68m', qLow: '\x1b[38;5;142m', qMid: '\x1b[38;5;222m', qHi: '\x1b[38;5;203m' },
+  catppuccin: { s: '\x1b[38;5;147m', c: '\x1b[38;5;114m', d: '\x1b[38;5;245m', e: '\x1b[38;5;212m', ok: '\x1b[38;5;114m', hi: '\x1b[38;5;203m', bar: '\x1b[38;5;117m', qLow: '\x1b[38;5;114m', qMid: '\x1b[38;5;222m', qHi: '\x1b[38;5;203m' },
+  dracula:    { s: '\x1b[38;5;171m', c: '\x1b[38;5;84m', d: '\x1b[38;5;244m', e: '\x1b[38;5;212m', ok: '\x1b[38;5;84m', hi: '\x1b[38;5;203m', bar: '\x1b[38;5;117m', qLow: '\x1b[38;5;84m', qMid: '\x1b[38;5;222m', qHi: '\x1b[38;5;203m' },
 };
 const C = THEMES[THEME] || THEMES.default;
 
@@ -125,8 +126,21 @@ process.stdin.on('end', () => {
       }
     }
 
+    // Quota display
+    const quota = readQuota();
+    const quotaParts = [];
+    if (quota) {
+      const qColor = quota.pct < 50 ? C.qLow : quota.pct < 80 ? C.qMid : C.qHi;
+      const filled = Math.round(quota.pct / 100 * 6);
+      const empty = 6 - filled;
+      const qBar = qColor + bar(filled) + R + DIM + '░'.repeat(empty) + R;
+      quotaParts.push(qBar + ' ' + dim(`${fmtCredits(quota.creditsUsed)}/${fmtCredits(quota.creditsTotal)}`));
+      if (quota.resetCountdown) quotaParts.push(dim(`⟳${quota.resetCountdown}`));
+    }
+
     const sep = ' ' + DIM + PL + ' ' + R;
     let output = left;
+    if (quotaParts.length > 0) output += sep + quotaParts.join(' ');
     if (right.length > 0) output += sep + right.join(' ');
 
     if (USE_POWERLINE) {

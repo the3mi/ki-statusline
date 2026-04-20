@@ -3,5 +3,8 @@
   "version": "1.0.0",
   "description": "Statusline for Kiro CLI",
   "type": "module",
-  "bin": "./statusline.js"
+  "bin": "./statusline.js",
+  "dependencies": {
+    "better-sqlite3": "^12.9.0"
+  }
 }
