@@ -5,12 +5,12 @@ import path from 'path';
 import os from 'os';
 import { spawnSync } from 'child_process';
 import { readQuota, fmtCredits } from './lib/quota.js';
+import { loadConfig } from './lib/config.js';
 
 // ─── Config ────────────────────────────────────────────────────────────────
-const THEME = 'catppuccin';  // 'default' | 'nord' | 'catppuccin' | 'dracula'
-const USE_POWERLINE = true;
-const PL  = USE_POWERLINE ? '\uE0B0' : '│';
-const PLR = USE_POWERLINE ? '\uE0B2' : '│';
+const cfg = loadConfig();
+const PL  = cfg.powerline ? '\uE0B0' : '|';
+const PLR = cfg.powerline ? '\uE0B2' : '|';
 const R = '\x1b[0m', DIM = '\x1b[2m', BOLD = '\x1b[1m';
 
 // ─── Themes ────────────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ const THEMES = {
   catppuccin: { s: '\x1b[38;5;147m', c: '\x1b[38;5;114m', d: '\x1b[38;5;245m', e: '\x1b[38;5;212m', ok: '\x1b[38;5;114m', hi: '\x1b[38;5;203m', bar: '\x1b[38;5;117m', qLow: '\x1b[38;5;114m', qMid: '\x1b[38;5;222m', qHi: '\x1b[38;5;203m' },
   dracula:    { s: '\x1b[38;5;171m', c: '\x1b[38;5;84m', d: '\x1b[38;5;244m', e: '\x1b[38;5;212m', ok: '\x1b[38;5;84m', hi: '\x1b[38;5;203m', bar: '\x1b[38;5;117m', qLow: '\x1b[38;5;84m', qMid: '\x1b[38;5;222m', qHi: '\x1b[38;5;203m' },
 };
-const C = THEMES[THEME] || THEMES.default;
+const C = THEMES[cfg.theme] || THEMES.default;
 
 // ─── Atomic write ─────────────────────────────────────────────────────────
 function atomicWrite(f, data) {
@@ -113,11 +113,11 @@ process.stdin.on('end', () => {
 
     // Right: agents + uptime
     const right = [];
-    if (running > 0) right.push(seg(`${running}\u25C6`, C.e));
-    right.push(dim(age));
+    if (cfg.showAgentCount && running > 0) right.push(seg(`${running}\u25C6`, C.e));
+    if (cfg.showUptime) right.push(dim(age));
 
     // Last tool/agent event
-    if (state.events.length > 0) {
+    if (cfg.showLastEvent && state.events.length > 0) {
       const last = state.events[0];
       if (last.type === 'tool') {
         right.push(dim(last.name));
@@ -165,7 +165,7 @@ process.stdin.on('end', () => {
     if (quotaParts.length > 0) output += sep + quotaParts.join(' ');
     if (right.length > 0) output += sep + right.join(' ');
 
-    if (USE_POWERLINE) {
+    if (cfg.powerline) {
       output = DIM + PLR + ' ' + R + output + ' ' + DIM + PL + R;
     }
 

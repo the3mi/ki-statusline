@@ -17,7 +17,7 @@ A lightweight statusline for **Kiro CLI** — shows session ID, working director
 ## Installation
 
 ```bash
-git clone https://github.com/the3mi/ki-statusline ~/.ki-statusline
+git clone https://github.com/sammylin/ki-statusline ~/.ki-statusline
 cd ~/.ki-statusline
 ```
 
