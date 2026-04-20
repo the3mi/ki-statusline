@@ -1,8 +1,6 @@
 # ki-statusline
 
-A lightweight statusline for **Kiro CLI** — shows session ID, working directory, active agents, and recent events.
-
-> Note: Kiro CLI doesn't expose cost/token/model data like Claude Code does, so this is a simpler statusline focused on session tracking.
+A lightweight statusline for **Kiro CLI** — shows session ID, working directory, active agents, quota usage, and recent events.
 
 ## Features
 
@@ -11,17 +9,46 @@ A lightweight statusline for **Kiro CLI** — shows session ID, working director
 - **Agent tracker** — shows number of active subagents
 - **Uptime** — how long the session has been running
 - **Recent events** — last tool call or agent stop event
+- **Quota display** — reads Kiro's local SQLite DB for credits usage, bonus credits, burn rate prediction
+- **Plan badge** — shows plan name (Pro/Free/Team)
 - **Themes** — default, nord, catppuccin, dracula
-- **Powerline mode** — beautiful separators (requires Nerd/Powerline font)
+- **Powerline mode** — beautiful separators (requires Nerd fonts)
+
+## Configuration
+
+All settings are in `lib/config.js`. Override via:
+
+**Option 1: JSON config** — create `~/.kiro/ki-statusline-config.json`:
+```json
+{
+  "theme": "catppuccin",
+  "powerline": true,
+  "burnHistorySize": 48,
+  "showAgentCount": true,
+  "showUptime": true,
+  "showLastEvent": true
+}
+```
+
+**Option 2: Env vars:**
+```bash
+export KI_STATUSLINE_THEME=dracula
+export KI_STATUSLINE_POWERLINE=false
+```
+
+## Themes
+
+Available: `default`, `nord`, `catppuccin`, `dracula`
 
 ## Installation
 
 ```bash
 git clone https://github.com/sammylin/ki-statusline ~/.ki-statusline
 cd ~/.ki-statusline
+npm install  # for better-sqlite3
 ```
 
-Then configure Kiro to use the hook scripts. Add to your `~/.kiro/settings.json`:
+Then configure Kiro hooks in `~/.kiro/settings.json`:
 
 ```json
 {
@@ -32,34 +59,31 @@ Then configure Kiro to use the hook scripts. Add to your `~/.kiro/settings.json`
 }
 ```
 
-For statusline display, create a wrapper script:
+## Quota Display
 
-```bash
-#!/bin/bash
-# Run kiro and show statusline
-~/.ki-statusline/statusline.js &
-KIRO_PID=$!
-kiro-cli chat "$@"
-kill $KIRO_PID 2>/dev/null
+ki-statusline reads Kiro's local SQLite DB at:
+```
+~/.kiro/data/User/globalStorage/state.vscdb
 ```
 
-## Themes
-
-Change `THEME` at top of `statusline.js`:
-
-```javascript
-const THEME = 'catppuccin'; // 'default' | 'nord' | 'catppuccin' | 'dracula'
-```
+Shows:
+- Credits usage bar + `used/total`
+- Bonus credits (if any)
+- Precise reset time with countdown
+- Burn rate prediction
 
 ## Requirements
 
 - Kiro CLI (kiro.dev)
 - Node.js 16+
-- Powerline/Nerd font (optional, for pretty separators)
+- `better-sqlite3` npm package
+- Nerd font (optional, for pretty separators)
 
 ## Architecture
 
 - `statusline.js` — main statusline, reads hook events via stdin, writes ANSI output
+- `lib/quota.js` — reads Kiro's local SQLite DB for quota info
+- `lib/config.js` — configuration
 - `hooks/agent-tracker.js` — Kiro hook script for agentSpawn/agentStop events
 - State stored in `~/.kiro/ki-statusline.json`
 
